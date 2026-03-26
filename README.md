@@ -2,7 +2,10 @@
 
 **NSE stock intelligence terminal — dual-signal alpha detection with live prices, AI-powered analysis, and real-time market data.**
 
-Built for the ET AI Hackathon 2026 (PS6 — AI for the Indian Investor).
+Built for the ET AI Hackathon 2026 (PS6 — AI for the Indian Investor). 
+
+Prototype deployed successfully in netlify 
+The deployment link - https://alphascope-2.netlify.app/
 
 ---
 
