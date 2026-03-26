@@ -4,7 +4,8 @@
 
 Built for the ET AI Hackathon 2026 (PS6 — AI for the Indian Investor). 
 
-Prototype deployed successfully in netlify 
+Prototype deployed successfully using netlify 
+
 The deployment link - https://alphascope-2.netlify.app/
 
 ---
