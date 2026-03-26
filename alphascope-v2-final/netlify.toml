@@ -40,11 +40,12 @@
   to = "/.netlify/functions/market"
   status = 200
 
-# SPA fallback - only for non-file, non-api paths
+# SPA fallback - catch all routes and serve index.html (Netlify handles static files automatically)
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+  force = false
 
 [functions]
   node_bundler = "esbuild"
