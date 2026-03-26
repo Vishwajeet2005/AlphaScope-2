@@ -1,0 +1,51 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+# Auth sub-routes
+[[redirects]]
+  from = "/api/auth/*"
+  to = "/.netlify/functions/auth/:splat"
+  status = 200
+
+# Bookmarks sub-routes (DELETE /api/bookmarks/SYMBOL needs :splat)
+[[redirects]]
+  from = "/api/bookmarks/*"
+  to = "/.netlify/functions/bookmarks/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/api/bookmarks"
+  to = "/.netlify/functions/bookmarks"
+  status = 200
+
+# Other API routes
+[[redirects]]
+  from = "/api/signals"
+  to = "/.netlify/functions/signals"
+  status = 200
+
+[[redirects]]
+  from = "/api/analysis"
+  to = "/.netlify/functions/analysis"
+  status = 200
+
+[[redirects]]
+  from = "/api/stocks/*"
+  to = "/.netlify/functions/stocks/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/api/market"
+  to = "/.netlify/functions/market"
+  status = 200
+
+# SPA fallback - only for non-file, non-api paths
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  conditions = {Role = ["admin"]}
+
+[functions]
+  node_bundler = "esbuild"

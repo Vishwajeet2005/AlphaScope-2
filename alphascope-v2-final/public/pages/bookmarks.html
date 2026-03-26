@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AlphaScope — Bookmarks</title>
+<link rel="stylesheet" href="/css/main.css">
+<style>
+.bm-page { max-width: 1000px; margin: 0 auto; padding: 24px; }
+.bm-page-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.bm-page-title { font-family: var(--font-display); font-size: 24px; font-weight: 800; }
+.bm-page-sub { font-size: 13px; color: var(--text2); margin-top: 3px; }
+
+.section-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.section-title { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); }
+.section-count { font-family: var(--font-mono); font-size: 11px; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 1px 8px; color: var(--text2); }
+
+.bm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 28px; }
+
+.bm-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; position: relative; transition: all 0.15s; }
+.bm-card:hover { border-color: var(--border2); box-shadow: var(--shadow-sm); }
+.bm-card.in-alpha { border-color: rgba(63,185,80,0.35); }
+.bm-card.in-alpha::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--green); border-radius: var(--radius-md) var(--radius-md) 0 0; }
+
+.bm-sym { font-family: var(--font-mono); font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+.bm-name { font-size: 12px; color: var(--text2); margin-bottom: 6px; line-height: 1.3; }
+.bm-sector { font-size: 10px; font-family: var(--font-mono); background: var(--bg3); border: 1px solid var(--border); border-radius: 3px; padding: 1px 6px; color: var(--text3); display: inline-block; }
+.bm-price { font-family: var(--font-mono); font-size: 14px; font-weight: 700; margin-top: 10px; }
+.alpha-tag { display: inline-block; font-size: 9px; font-family: var(--font-mono); font-weight: 700; background: var(--green); color: #fff; border-radius: 3px; padding: 1px 5px; margin-top: 5px; }
+.bm-actions { display: flex; gap: 6px; margin-top: 10px; }
+.bm-remove { position: absolute; top: 10px; right: 10px; background: transparent; border: none; color: var(--text3); font-size: 14px; transition: color 0.15s; padding: 3px; border-radius: 4px; }
+.bm-remove:hover { color: var(--red); background: var(--red-bg); }
+
+.empty-bm { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 20px; gap: 12px; color: var(--text3); text-align: center; }
+.empty-bm-icon { font-size: 48px; opacity: 0.4; }
+.empty-bm-title { font-family: var(--font-mono); font-size: 14px; color: var(--text2); }
+.empty-bm-sub { font-size: 13px; max-width: 260px; line-height: 1.6; }
+
+.loading-bm { display: flex; align-items: center; gap: 10px; padding: 40px 0; color: var(--text2); font-family: var(--font-mono); font-size: 13px; }
+</style>
+</head>
+<body>
+<nav class="navbar" id="navbar"></nav>
+
+<div class="bm-page">
+  <div class="bm-page-hdr">
+    <div>
+      <div class="bm-page-title">★ Bookmarks</div>
+      <div class="bm-page-sub">Your saved stocks and watchlist</div>
+    </div>
+    <a href="/pages/dashboard.html" class="btn btn-secondary btn-sm">← Dashboard</a>
+  </div>
+
+  <div id="bmContent">
+    <div class="loading-bm"><div class="spinner"></div>Loading your bookmarks…</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="/js/app.js"></script>
+<script>
+if (!Auth.requireAuth()) throw new Error();
+
+let bookmarks   = [];
+let alphaSyms   = new Set();
+
+async function init() {
+  renderNav('bookmarks');
+  // load alpha signals to cross-reference
+  const sigRes = await apiGet('/signals');
+  if (sigRes?.ok) alphaSyms = new Set((sigRes.data.signals || []).map(s => s.symbol));
+  window._alphaSignals = sigRes?.data?.signals || [];
+  bookmarks = await loadBm();
+  render();
+}
+
+async function loadBm() {
+  const res = await apiGet('/bookmarks');
+  return res?.ok ? (res.data || []) : [];
+}
+
+function render() {
+  const container = document.getElementById('bmContent');
+  if (!bookmarks.length) {
+    container.innerHTML = `
+      <div class="empty-bm">
+        <div class="empty-bm-icon">☆</div>
+        <div class="empty-bm-title">No bookmarks yet</div>
+        <div class="empty-bm-sub">Search for any NSE stock and click ☆ to save it here. Alpha signal stocks are automatically highlighted.</div>
+        <a href="/pages/dashboard.html" class="btn btn-primary" style="margin-top:8px">Go to Dashboard</a>
+      </div>`;
+    return;
+  }
+
+  const inAlpha = bookmarks.filter(b => alphaSyms.has(b.symbol));
+  const others  = bookmarks.filter(b => !alphaSyms.has(b.symbol));
+
+  let html = '';
+
+  if (inAlpha.length) {
+    html += `<div class="section-hdr">
+      <span class="section-title">▲ In Alpha Signals</span>
+      <span class="section-count">${inAlpha.length} stocks</span>
+    </div>
+    <div class="bm-grid">
+      ${inAlpha.map(b => bmCard(b, true)).join('')}
+    </div>`;
+  }
+
+  if (others.length) {
+    html += `<div class="section-hdr">
+      <span class="section-title">Watchlist</span>
+      <span class="section-count">${others.length} stocks</span>
+    </div>
+    <div class="bm-grid">
+      ${others.map(b => bmCard(b, false)).join('')}
+    </div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+function bmCard(b, inAlpha) {
+  const savedAt = b.bookmarked_at ? new Date(b.bookmarked_at).toLocaleDateString('en-IN', {day:'2-digit',month:'short'}) : '';
+  return `
+    <div class="bm-card ${inAlpha ? 'in-alpha' : ''}" id="bmc-${b.symbol}">
+      <button class="bm-remove" onclick="removeBm('${b.symbol}','${b.name}')" title="Remove">✕</button>
+      <div class="bm-sym">${b.symbol}</div>
+      <div class="bm-name">${b.name}</div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <span class="bm-sector">${b.sector}</span>
+        ${inAlpha ? '<span class="alpha-tag">ALPHA</span>' : ''}
+      </div>
+      <div class="bm-price">₹${(b.price || 0).toLocaleString('en-IN', {maximumFractionDigits:2})}</div>
+      ${savedAt ? `<div style="font-size:10px;color:var(--text3);margin-top:4px;font-family:var(--font-mono)">Saved ${savedAt}</div>` : ''}
+      <div class="bm-actions">
+        <a href="/pages/stock.html?symbol=${b.symbol}&name=${encodeURIComponent(b.name)}&sector=${encodeURIComponent(b.sector)}" class="btn btn-ghost btn-sm" style="flex:1;justify-content:center">Analysis →</a>
+      </div>
+    </div>`;
+}
+
+async function removeBm(symbol, name) {
+  await apiDel('/bookmarks/' + symbol);
+  toast(symbol + ' removed from bookmarks', 'warn');
+  bookmarks = bookmarks.filter(b => b.symbol !== symbol);
+  await refreshBmCount();
+  render();
+}
+
+init();
+</script>
+</body>
+</html>

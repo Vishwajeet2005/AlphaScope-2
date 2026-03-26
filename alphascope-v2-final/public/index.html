@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AlphaScope — Sign In</title>
+<link rel="stylesheet" href="/css/main.css">
+<style>
+body { display: flex; flex-direction: column; min-height: 100vh; }
+.auth-page {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  background: var(--bg);
+}
+.auth-wrap {
+  display: grid; grid-template-columns: 1fr 1fr;
+  max-width: 900px; width: 100%;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+@media (max-width: 680px) { .auth-wrap { grid-template-columns: 1fr; } .auth-hero { display: none; } }
+.auth-hero {
+  background: var(--bg3);
+  border-right: 1px solid var(--border);
+  padding: 40px 36px;
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.hero-logo {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-display); font-size: 22px; font-weight: 800;
+}
+.hero-logo-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--green); }
+.hero-tagline { font-size: 28px; font-weight: 700; font-family: var(--font-display); line-height: 1.3; margin: 32px 0 16px; }
+.hero-tagline span { color: var(--green); }
+.hero-sub { font-size: 14px; color: var(--text2); line-height: 1.7; }
+.hero-stats { display: flex; flex-direction: column; gap: 12px; margin-top: 32px; }
+.hero-stat {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+}
+.hero-stat-icon { font-size: 18px; }
+.hero-stat-text { font-size: 12px; color: var(--text2); }
+.hero-stat-text strong { color: var(--text); display: block; font-size: 13px; }
+
+.auth-form-side { padding: 40px 36px; display: flex; flex-direction: column; }
+.auth-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 28px; }
+.auth-tab {
+  flex: 1; text-align: center; padding: 10px;
+  font-size: 13px; font-weight: 600;
+  color: var(--text2); cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: all 0.15s;
+}
+.auth-tab.active { color: var(--green); border-bottom-color: var(--green); }
+.auth-panel { display: none; flex-direction: column; gap: 16px; }
+.auth-panel.active { display: flex; }
+.auth-title  { font-family: var(--font-display); font-size: 20px; font-weight: 700; }
+.auth-sub    { font-size: 13px; color: var(--text2); margin-top: 2px; }
+.auth-footer { margin-top: 8px; font-size: 12px; color: var(--text3); text-align: center; }
+.auth-footer a { color: var(--blue); text-decoration: underline; cursor: pointer; }
+
+.theme-btn-wrap { position: fixed; top: 16px; right: 16px; }
+</style>
+</head>
+<body>
+
+<div class="theme-btn-wrap">
+  <button class="theme-toggle" onclick="Theme.toggle()">☀️</button>
+</div>
+
+<div class="auth-page">
+  <div class="auth-wrap">
+
+    <!-- Hero Panel -->
+    <div class="auth-hero">
+      <div>
+        <div class="hero-logo">
+          <div class="hero-logo-dot"></div> AlphaScope
+        </div>
+        <div class="hero-tagline">NSE Intelligence<br><span>Terminal.</span></div>
+        <div class="hero-sub">Dual-signal alpha detection — chart patterns cross-validated with fundamental events. Real-time NSE data, AI-powered briefs.</div>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <span class="hero-stat-icon">📡</span>
+          <div class="hero-stat-text"><strong>Live NSE Prices</strong>Real-time via Yahoo Finance</div>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-icon">🤖</span>
+          <div class="hero-stat-text"><strong>AI Briefs</strong>Claude + web search, refreshed every 30 min</div>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-icon">⭐</span>
+          <div class="hero-stat-text"><strong>Bookmarks</strong>Save stocks, track your watchlist</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Panel -->
+    <div class="auth-form-side">
+      <div class="auth-tabs">
+        <div class="auth-tab active" onclick="switchTab('login',this)">Sign In</div>
+        <div class="auth-tab" onclick="switchTab('register',this)">Create Account</div>
+      </div>
+
+      <!-- LOGIN -->
+      <div class="auth-panel active" id="panel-login">
+        <div>
+          <div class="auth-title">Welcome back</div>
+          <div class="auth-sub">Sign in to your AlphaScope account</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input class="form-input" id="l-user" type="text" placeholder="your_username" autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input class="form-input" id="l-pass" type="password" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <div class="form-error" id="l-err"></div>
+        <button class="btn btn-primary btn-full" id="l-btn" onclick="doLogin()">
+          <span id="l-btn-text">Sign In</span>
+        </button>
+        <div class="auth-footer">Don't have an account? <a onclick="switchTab('register',document.querySelector('.auth-tab:last-child'))">Create one</a></div>
+      </div>
+
+      <!-- REGISTER -->
+      <div class="auth-panel" id="panel-register">
+        <div>
+          <div class="auth-title">Create account</div>
+          <div class="auth-sub">Start tracking NSE alpha signals</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input class="form-input" id="r-user" type="text" placeholder="your_username" autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" id="r-email" type="email" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input class="form-input" id="r-pass" type="password" placeholder="Min. 6 characters" autocomplete="new-password">
+        </div>
+        <div class="form-error" id="r-err"></div>
+        <button class="btn btn-primary btn-full" id="r-btn" onclick="doRegister()">
+          <span id="r-btn-text">Create Account</span>
+        </button>
+        <div class="auth-footer">Already have an account? <a onclick="switchTab('login',document.querySelector('.auth-tab:first-child'))">Sign in</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/js/app.js"></script>
+<script>
+// Redirect if already logged in
+if (Auth.isLoggedIn()) window.location.href = '/pages/dashboard.html';
+
+function switchTab(name, el) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+async function doLogin() {
+  const username = document.getElementById('l-user').value.trim();
+  const password = document.getElementById('l-pass').value;
+  const errEl    = document.getElementById('l-err');
+  const btn      = document.getElementById('l-btn-text');
+  errEl.classList.remove('show');
+  if (!username || !password) { showErr(errEl, 'All fields required'); return; }
+  btn.textContent = 'Signing in…';
+  document.getElementById('l-btn').disabled = true;
+  const res = await fetch('/.netlify/functions/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  });
+  const data = await res.json();
+  if (!res.ok) { showErr(errEl, data.error || 'Login failed'); btn.textContent = 'Sign In'; document.getElementById('l-btn').disabled = false; return; }
+  Auth.setSession(data.token, data.user);
+  window.location.href = '/pages/dashboard.html';
+}
+
+async function doRegister() {
+  const username = document.getElementById('r-user').value.trim();
+  const email    = document.getElementById('r-email').value.trim();
+  const password = document.getElementById('r-pass').value;
+  const errEl    = document.getElementById('r-err');
+  const btn      = document.getElementById('r-btn-text');
+  errEl.classList.remove('show');
+  if (!username || !email || !password) { showErr(errEl, 'All fields required'); return; }
+  btn.textContent = 'Creating…';
+  document.getElementById('r-btn').disabled = true;
+  const res = await fetch('/.netlify/functions/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, email, password }),
+  });
+  const data = await res.json();
+  if (!res.ok) { showErr(errEl, data.error || 'Registration failed'); btn.textContent = 'Create Account'; document.getElementById('r-btn').disabled = false; return; }
+  Auth.setSession(data.token, data.user);
+  toast('Account created! Welcome to AlphaScope.', 'success');
+  setTimeout(() => window.location.href = '/pages/dashboard.html', 800);
+}
+
+function showErr(el, msg) { el.textContent = msg; el.classList.add('show'); }
+
+// Enter key
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const active = document.querySelector('.auth-panel.active');
+    if (active.id === 'panel-login') doLogin();
+    else doRegister();
+  }
+});
+</script>
+</body>
+</html>

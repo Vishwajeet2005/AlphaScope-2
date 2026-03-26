@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AlphaScope — Stock Analysis</title>
+<link rel="stylesheet" href="/css/main.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+.stock-page { max-width: 1100px; margin: 0 auto; padding: 24px; }
+.stock-hero { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: start; margin-bottom: 24px; }
+.hero-left .sym { font-family: var(--font-display); font-size: 32px; font-weight: 800; }
+.hero-left .full-name { font-size: 16px; color: var(--text2); margin-top: 3px; }
+.hero-left .sector-tag { display: inline-block; font-size: 11px; font-family: var(--font-mono); background: var(--bg3); border: 1px solid var(--border2); border-radius: 4px; padding: 2px 8px; color: var(--text2); margin-top: 6px; }
+.hero-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.price-hero { font-family: var(--font-mono); font-size: 36px; font-weight: 700; }
+.chg-hero { font-family: var(--font-mono); font-size: 15px; }
+.action-row { display: flex; gap: 8px; align-items: center; }
+
+.meta-strip { display: flex; gap: 20px; flex-wrap: wrap; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 20px; }
+.meta-item { display: flex; flex-direction: column; gap: 2px; }
+.meta-lbl { font-size: 10px; color: var(--text3); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .6px; }
+.meta-val { font-family: var(--font-mono); font-size: 14px; font-weight: 700; }
+
+.range-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 20px; }
+.range-title { font-size: 11px; font-family: var(--font-mono); color: var(--text3); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 10px; }
+.range-bar { position: relative; height: 6px; background: var(--border); border-radius: 3px; margin: 8px 0; }
+.range-fill { position: absolute; height: 6px; background: linear-gradient(90deg, var(--red), var(--amber), var(--green)); border-radius: 3px; width: 100%; }
+.range-dot  { position: absolute; top: -5px; width: 16px; height: 16px; border-radius: 50%; background: var(--amber); border: 2px solid var(--bg2); transform: translateX(-50%); }
+.range-lbls { display: flex; justify-content: space-between; font-size: 11px; font-family: var(--font-mono); color: var(--text2); }
+
+.chart-section { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px; }
+.chart-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.chart-title { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; }
+.chart-wrap { height: 260px; position: relative; }
+
+.analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.an-box { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; }
+.an-title { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); margin-bottom: 12px; }
+
+.conviction-section { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px; }
+.conv-row { display: flex; align-items: center; gap: 14px; }
+.conv-lbl { font-family: var(--font-mono); font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .8px; white-space: nowrap; }
+.conv-track { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.conv-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
+.conv-val { font-family: var(--font-mono); font-size: 14px; font-weight: 700; white-space: nowrap; }
+
+.brief-section { background: var(--bg2); border: 1px solid var(--border); border-left: 3px solid var(--green); border-radius: var(--radius-md); padding: 18px; margin-bottom: 20px; }
+.brief-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.brief-tag { font-family: var(--font-mono); font-size: 9px; font-weight: 700; background: var(--green); color: #fff; padding: 3px 9px; border-radius: 3px; letter-spacing: .5px; }
+.brief-meta { font-size: 11px; color: var(--text3); font-family: var(--font-mono); }
+.brief-text { font-size: 14px; line-height: 1.8; }
+
+.pat-item { padding: 10px 12px; background: var(--bg3); border-radius: var(--radius-sm); border-left: 2px solid var(--purple); margin-bottom: 8px; }
+.pat-name { font-size: 13px; font-weight: 600; color: var(--purple); margin-bottom: 3px; }
+.pat-det  { font-size: 11px; color: var(--text2); line-height: 1.45; }
+.wr-row  { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.wr-lbl  { font-size: 10px; color: var(--text3); font-family: var(--font-mono); }
+.wr-bg   { flex: 1; height: 4px; background: var(--border); border-radius: 2px; }
+.wr-fill { height: 4px; border-radius: 2px; background: var(--green); }
+.wr-pct  { font-size: 11px; font-family: var(--font-mono); font-weight: 700; color: var(--green); }
+.ev-item { display: flex; gap: 8px; padding: 8px 10px; background: var(--bg3); border-left: 2px solid var(--blue); border-radius: var(--radius-sm); margin-bottom: 6px; }
+.ev-score { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--amber); }
+.ev-desc  { font-size: 11px; color: var(--text2); line-height: 1.4; }
+
+.loading-state { display: flex; flex-direction: column; align-items: center; padding: 80px 20px; gap: 14px; color: var(--text2); }
+.loading-state .spinner { width: 28px; height: 28px; }
+.error-state { display: flex; flex-direction: column; align-items: center; padding: 80px 20px; gap: 14px; color: var(--text3); text-align: center; }
+</style>
+</head>
+<body>
+<nav class="navbar" id="navbar"></nav>
+
+<div class="stock-page" id="stockPage">
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <div>Fetching live data from NSE…</div>
+    <div style="font-size:11px;color:var(--text3);font-family:var(--font-mono)">Prices via Yahoo Finance · AI brief via Claude</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="/js/app.js"></script>
+<script>
+if (!Auth.requireAuth()) throw new Error();
+
+const params = new URLSearchParams(location.search);
+const SYMBOL = params.get('symbol') || '';
+const NAME   = decodeURIComponent(params.get('name') || SYMBOL);
+const SECTOR = decodeURIComponent(params.get('sector') || '');
+
+if (!SYMBOL) window.location.href = '/pages/dashboard.html';
+
+let stockData = null;
+let bookmarks = [];
+
+async function init() {
+  renderNav('');
+  document.title = `AlphaScope — ${SYMBOL}`;
+  bookmarks = await refreshBmCount();
+  await loadStockData();
+}
+
+async function loadStockData() {
+  const res = await apiGet(`/analysis?symbol=${SYMBOL}`);
+  if (!res?.ok) {
+    document.getElementById('stockPage').innerHTML = `
+      <div class="error-state">
+        <div style="font-size:40px">⚠️</div>
+        <div style="font-family:var(--font-mono);font-size:14px">Could not load data for ${SYMBOL}</div>
+        <div style="font-size:12px">Yahoo Finance may be rate-limiting. Try again in a moment.</div>
+        <button class="btn btn-secondary" onclick="loadStockData()">Retry</button>
+        <a href="/pages/dashboard.html" class="btn btn-ghost">← Back to Dashboard</a>
+      </div>`;
+    return;
+  }
+  stockData = res.data;
+  renderStock(stockData);
+}
+
+function renderStock(d) {
+  const up   = d.change_pct >= 0;
+  const bm   = bookmarks.some(b => b.symbol === d.symbol);
+  const cp   = convPct(d.conviction);
+  const cc   = convColor(d.conviction);
+  const low52  = d.low_52w  || d.price * 0.8;
+  const high52 = d.high_52w || d.price * 1.2;
+  const rangePos = Math.min(99, Math.max(1, Math.round(((d.price - low52) / (high52 - low52)) * 100)));
+  const mc = d.market_cap ? (d.market_cap > 1e12 ? (d.market_cap/1e12).toFixed(2)+'T' : (d.market_cap/1e9).toFixed(1)+'B') : '—';
+  const wr = Math.round((d.chart_winrate || 0) * 100);
+
+  const patsHTML = (d.chart_patterns || []).map(p => `
+    <div class="pat-item">
+      <div class="pat-name">${p.pattern || p}</div>
+      ${d.chart_details ? `<div class="pat-det">${d.chart_details}</div>` : ''}
+      <div class="wr-row"><div class="wr-lbl">Win rate</div><div class="wr-bg"><div class="wr-fill" style="width:${wr}%"></div></div><div class="wr-pct">${wr}%</div></div>
+    </div>`).join('') || `<div style="color:var(--text3);font-size:12px">No strong patterns detected currently.</div>`;
+
+  const evHTML = (d.radar_events || []).map(e =>
+    `<div class="ev-item"><div class="ev-score">+${e.score}</div><div class="ev-desc">${e.desc}</div></div>`
+  ).join('') || `<div style="color:var(--text3);font-size:12px">No significant events detected.</div>`;
+
+  document.getElementById('stockPage').innerHTML = `
+    <div style="margin-bottom:12px"><a href="/pages/dashboard.html" style="font-size:12px;color:var(--blue);font-family:var(--font-mono)">← Dashboard</a></div>
+
+    <div class="stock-hero">
+      <div class="hero-left">
+        <div class="sym">${d.symbol}</div>
+        <div class="full-name">${d.name}</div>
+        <span class="sector-tag">${d.sector}</span>
+      </div>
+      <div class="hero-right">
+        <div class="price-hero">₹${d.price.toFixed(2)}</div>
+        <div class="chg-hero ${up?'chg-up':'chg-dn'}">${up?'+':''}${d.change_pct.toFixed(2)}% today</div>
+        <div class="action-row">
+          <button class="btn btn-ghost btn-sm ${bm?'':''}${bm?'bm-active':''}" id="bmBtn"
+            onclick="toggleBm('${d.symbol}','${d.name}','${d.sector}',${d.price})"
+            style="${bm?'border-color:var(--amber);color:var(--amber)':''}">${bm?'★ Bookmarked':'☆ Bookmark'}</button>
+          <span class="badge ${convBadgeClass(d.conviction)}" style="font-size:11px;padding:4px 10px">${d.conviction}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="meta-strip">
+      <div class="meta-item"><div class="meta-lbl">Prev Close</div><div class="meta-val">₹${(d.prev_close||0).toFixed(2)}</div></div>
+      <div class="meta-item"><div class="meta-lbl">52W High</div><div class="meta-val" style="color:var(--green)">₹${high52.toFixed(0)}</div></div>
+      <div class="meta-item"><div class="meta-lbl">52W Low</div><div class="meta-val" style="color:var(--red)">₹${low52.toFixed(0)}</div></div>
+      <div class="meta-item"><div class="meta-lbl">Market Cap</div><div class="meta-val">₹${mc}</div></div>
+      <div class="meta-item"><div class="meta-lbl">Radar Score</div><div class="meta-val" style="color:var(--blue)">${d.radar_score}/10</div></div>
+      <div class="meta-item"><div class="meta-lbl">Analyzed</div><div class="meta-val" style="font-size:11px">${d.analyzed_at ? new Date(d.analyzed_at).toLocaleTimeString() : '—'}</div></div>
+    </div>
+
+    <div class="range-wrap">
+      <div class="range-title">52-week price range</div>
+      <div class="range-bar"><div class="range-fill"></div><div class="range-dot" style="left:${rangePos}%"></div></div>
+      <div class="range-lbls"><span>₹${low52.toFixed(0)} 52W Low</span><span style="color:var(--amber)">₹${d.price.toFixed(2)} Current</span><span>₹${high52.toFixed(0)} 52W High</span></div>
+    </div>
+
+    <div class="conviction-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <span style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--text3)">Alpha Conviction</span>
+        <span class="badge ${convBadgeClass(d.conviction)}" style="font-size:11px">${d.conviction}</span>
+      </div>
+      <div class="conv-row">
+        <div class="conv-lbl">Strength</div>
+        <div class="conv-track"><div class="conv-fill" style="width:${cp}%;background:${cc}"></div></div>
+        <div class="conv-val" style="color:${cc}">${cp}%</div>
+      </div>
+    </div>
+
+    <div class="chart-section">
+      <div class="chart-h">
+        <span class="chart-title">Price chart</span>
+        <div class="chart-tabs">
+          <button class="chart-tab active" onclick="switchChart('price',this)">Price + SMA</button>
+          <button class="chart-tab" onclick="switchChart('rsi',this)">RSI</button>
+          <button class="chart-tab" onclick="switchChart('volume',this)">Volume</button>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="stockChart"></canvas></div>
+    </div>
+
+    <div class="analysis-grid">
+      <div class="an-box">
+        <div class="an-title">▲ Chart patterns</div>
+        ${patsHTML}
+      </div>
+      <div class="an-box">
+        <div class="an-title">◉ Opportunity radar</div>
+        ${evHTML}
+        <div style="margin-top:10px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;color:var(--text3);font-family:var(--font-mono)">Composite score</span>
+          <span style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:var(--blue)">${d.radar_score}/10</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="brief-section">
+      <div class="brief-hdr">
+        <span class="brief-tag">AI BRIEF</span>
+        <span class="brief-meta">Claude + web search · ${d.analyzed_at ? new Date(d.analyzed_at).toLocaleTimeString() : 'live'}</span>
+      </div>
+      <div class="brief-text">${d.ai_brief || 'Analysis loading…'}</div>
+    </div>
+
+    <div style="text-align:center;padding:8px 0 24px">
+      <button class="btn btn-secondary" onclick="loadStockData()">↻ Refresh Analysis</button>
+    </div>`;
+
+  destroyCharts();
+  drawChart('stockChart', 'price', d);
+}
+
+function switchChart(type, btn) {
+  document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  if (stockData) drawChart('stockChart', type, stockData);
+}
+
+async function toggleBm(symbol, name, sector, price) {
+  const isBm = bookmarks.some(b => b.symbol === symbol);
+  if (isBm) {
+    await apiDel('/bookmarks/' + symbol);
+    toast(symbol + ' removed', 'warn');
+  } else {
+    await apiPost('/bookmarks', { symbol, name, sector, price });
+    toast('★ ' + symbol + ' bookmarked', 'success');
+  }
+  bookmarks = await refreshBmCount();
+  const btn = document.getElementById('bmBtn');
+  if (btn) {
+    const on = bookmarks.some(b => b.symbol === symbol);
+    btn.textContent = on ? '★ Bookmarked' : '☆ Bookmark';
+    btn.style.borderColor = on ? 'var(--amber)' : '';
+    btn.style.color = on ? 'var(--amber)' : '';
+  }
+}
+
+init();
+</script>
+</body>
+</html>

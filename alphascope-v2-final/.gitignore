@@ -1,0 +1,7 @@
+node_modules/
+.env.local
+.env
+data/users.json
+data/bookmarks.json
+.netlify/
+*.log
